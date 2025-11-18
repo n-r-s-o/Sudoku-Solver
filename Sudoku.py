@@ -17,7 +17,7 @@ class Sudoku:
         # Populate the list of rows.
         for row in board:
             row_name = f"h{str(row_counter)}"
-            horisontal_vector = Sudoku.Vector(name=row_name)
+            horizontal_vector = Sudoku.Vector(name=row_name)
 
             for item in row:
                 if item == ".":
@@ -31,12 +31,12 @@ class Sudoku:
                     value=value
                     )
                     
-                horisontal_vector.add_cell(cell)
+                horizontal_vector.add_cell(cell)
                 columns[column_counter - 1].add_cell(cell)
 
                 column_counter += 1
 
-            rows.append(horisontal_vector)
+            rows.append(horizontal_vector)
             row_counter += 1
             column_counter = 1
 

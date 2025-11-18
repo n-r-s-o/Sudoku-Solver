@@ -1,6 +1,6 @@
 # Sudoku Solver
 
-This project is a wip. The plan is to make a program that takes an input representation of a sudoku puzzle, as a list of lists of strings, and then solves the puzzle efficiently. My approach is to firstly invent my own algorithm to solve the problem, and then look up well-established methods online, so that I can do a side-by-side comparison and gain new insights into how I can better approach similar problems in the future.
+This project is a wip. The plan is to make a program that takes an input representation of a sudoku puzzle, as a list of lists of strings, and then solves the puzzle efficiently. My approach is to firstly invent my own algorithm to solve the problem, and then to look up well-established methods online, so that I can do a side-by-side comparison and gain new insights into how I can better approach similar problems in the future.
 
 ## Project plan
 
