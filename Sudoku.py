@@ -1,20 +1,40 @@
 class Sudoku:
     # __rows = list[Sudoku.Vector]
     # __columns = list[Sudoku.Vector]
+    # __missing_nums_dict = dict[str, list[int]]
 
-    def __init__(self, board: list[list[str]]) -> None:
+    def __init__(self, board: list[list[int]]) -> None:
+        # Assert that the board argument meets the criteria of a valid 
+        # sudoku board.
+        assert len(board) == 9
+        for row in board:
+            assert len(row) == 9
+
+        rows, columns = Sudoku.__unpack_vectors(self, board)
+        self.__rows = rows
+        self.__columns = columns
+
+        missing_row_nums = Sudoku.__calculate_missing_nums(self, "rows")
+        missing_col_nums = Sudoku.__calculate_missing_nums(self, "columns")
+        self.__missing_nums_dict = missing_row_nums|missing_col_nums
+
+    def __repr__(self) -> str:
+        representation = " " * 6
+        for v in range(9):
+            representation += f"v{v + 1}  "
+        representation += "\n" + (" " * 6) + ("_" * 35) + "\n"
+        for row in self.__rows:
+            representation += repr(row) + "\n"
+        return representation
+
+    def __unpack_vectors(self, board: list[list[int]]) -> tuple[
+        list[Sudoku.Vector], 
+        list[Sudoku.Vector]
+        ]:
         rows: list[Sudoku.Vector] = []
         columns: list[Sudoku.Vector] = []
         row_counter = 1
         column_counter = 1
-
-        # Assert that the board argument meets the criteria of a valid sudoku 
-        # board.
-        assert len(board) == 9
-        for row in board:
-            assert len(row) == 9
-            for cell in row:
-                assert isinstance(int(cell), int)
 
         # Populate the list of columns.
         for column in range(9):
@@ -27,16 +47,11 @@ class Sudoku:
             row_name = f"h{str(row_counter)}"
             horizontal_vector = Sudoku.Vector(name=row_name)
 
-            for item in row:
-                if item == ".":
-                    value = -1
-                else:
-                    value = int(item)
-
+            for num in row:
                 cell = self.Cell(
                     row=row_name,
                     col=f"v{str(column_counter)}", 
-                    value=value
+                    value=num
                     )
                     
                 horizontal_vector.add_cell(cell)
@@ -46,18 +61,34 @@ class Sudoku:
             rows.append(horizontal_vector)
             row_counter += 1
             column_counter = 1
+        
+        return rows, columns
 
-        self.__rows = rows
-        self.__columns = columns
+    def __calculate_missing_nums(self, type: str) -> dict[str, list[int]]:
+        assert type == "rows" or "columns"
+        missing_nums_dict = {}
 
-    def __repr__(self) -> str:
-        representation = " " * 6
-        for v in range(9):
-            representation += f"v{v + 1}  "
-        representation += "\n" + (" " * 6) + ("_" * 35) + "\n"
-        for row in self.__rows:
-            representation += repr(row) + "\n"
-        return representation
+        if type == "rows":
+            collection = self.__rows
+        else:
+            collection = self.__columns
+
+        for vector in collection:
+            name = vector.get_name()
+            cells = vector.get_cells_list()
+            nums = []
+            missing_nums = []
+
+            for cell in cells:
+                nums.append(cell.get_value())
+
+            for num in range(9):
+                if num + 1 not in nums:
+                    missing_nums.append(num + 1)
+
+            missing_nums_dict[name] = missing_nums
+
+        return missing_nums_dict
 
     def get_rows(self) -> list[Vector]:
         return self.__rows
@@ -68,6 +99,12 @@ class Sudoku:
     def solve(self) -> None:
         # TODO
         pass
+
+    def print_missing_nums(self) -> None:
+        print("__Missing values__")
+        for key in self.__missing_nums_dict.keys():
+            print(f"{key}: {self.__missing_nums_dict[key]}")
+        print()
 
     class Vector:
         # __name: str
@@ -80,10 +117,10 @@ class Sudoku:
         def __repr__(self) -> str:
             representation = f"{self.__name}   |_"
             for cell in self.__cells:
-                value = str(cell.get_value())
-                if value == "-1":
+                value = cell.get_value()
+                if value == 0:
                     value = "_"
-                representation += value + "_|_"
+                representation += str(value) + "_|_"
             return representation[0:-1]
 
         def add_cell(self, cell) -> None:
@@ -110,12 +147,12 @@ class Sudoku:
         # __value: int
         # __possible_values: list[int] | None
 
-        def __init__(self, row: str, col: str, value: int = -1) -> None:
+        def __init__(self, row: str, col: str, value: int = 0) -> None:
             self.__row = row
             self.__column = col
             self.__value = value
             
-            if value != -1:
+            if value != 0:
                 self.__possible_values = [value]
             else:
                 self.__possible_values = None
@@ -125,7 +162,7 @@ class Sudoku:
             assert isinstance(other, Sudoku.Cell)
             has_same_row = self.__row == other.get_row()
             has_same_column = self.__column == other.get_col()
-            
+
             if has_same_row and has_same_column:
                 return True
             else:
