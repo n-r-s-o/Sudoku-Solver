@@ -16,8 +16,8 @@ This project is a wip. The plan is to make a program that takes an input represe
 
 4. Introduce `solve()` and `check_validity()` methods.
 
-5. Refine and test.
+5. Refine and test. Flesh out and improve upon the documentation.
 
 6. Introduce more types of accepted inputs, e.g. by image. Create a method for checking if a sudoku puzzle is able to be solved, or if it has multiple solutions.
 
-7. Research other, more well-establish sudoku algorithms online. Compare these to my solution and analyze its potential shortcomings. 
+7. Research other, more well-established sudoku algorithms online. Compare these to my solution and analyze its potential shortcomings. 
