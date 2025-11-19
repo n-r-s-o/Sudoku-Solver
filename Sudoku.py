@@ -8,8 +8,16 @@ class Sudoku:
         row_counter = 1
         column_counter = 1
 
+        # Assert that the board argument meets the criteria of a valid sudoku 
+        # board.
+        assert len(board) == 9
+        for row in board:
+            assert len(row) == 9
+            for cell in row:
+                assert isinstance(int(cell), int)
+
         # Populate the list of columns.
-        for column in range(len(board)):
+        for column in range(9):
             col_name = f"v{str(column + 1)}"
             vertical_vector = Sudoku.Vector(name=col_name)
             columns.append(vertical_vector)
@@ -33,7 +41,6 @@ class Sudoku:
                     
                 horizontal_vector.add_cell(cell)
                 columns[column_counter - 1].add_cell(cell)
-
                 column_counter += 1
 
             rows.append(horizontal_vector)
@@ -45,16 +52,11 @@ class Sudoku:
 
     def __repr__(self) -> str:
         representation = " " * 6
-
         for v in range(9):
             representation += f"v{v + 1}  "
-
-        representation += "\n"
-        representation += (" " * 6) + ("_" * 35) + "\n"
-
+        representation += "\n" + (" " * 6) + ("_" * 35) + "\n"
         for row in self.__rows:
             representation += repr(row) + "\n"
-
         return representation
 
     def get_rows(self) -> list[Vector]:
@@ -81,7 +83,6 @@ class Sudoku:
                 value = str(cell.get_value())
                 if value == "-1":
                     value = "_"
-
                 representation += value + "_|_"
             return representation[0:-1]
 
@@ -122,7 +123,10 @@ class Sudoku:
         # Needless?
         def __eq__(self, other) -> bool:
             assert isinstance(other, Sudoku.Cell)
-            if self.__row == other.get_row() and self.__column == other.get_col():
+            has_same_row = self.__row == other.get_row()
+            has_same_column = self.__column == other.get_col()
+            
+            if has_same_row and has_same_column:
                 return True
             else:
                 return False 
@@ -144,9 +148,3 @@ class Sudoku:
 
         def set_value(self, value: int) -> None:
             self.__value = value
-    
-        def has_value(self) -> bool:
-            if self.__value == -1:
-                return False
-            else:
-                return True
