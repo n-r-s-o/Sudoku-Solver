@@ -10,11 +10,11 @@ This project is a wip. The plan is to make a program that takes an input represe
 
 2. Create rough drafts of the Sudoku module's classes, including data collections.
 
-### Steps to do
-
 3. Add data structures for missing numbers by row, column, and blocks (9 x 9 cells).
 
-4. Introduce `solve()` and `check_validity()` methods.
+4. Introduce `solve()` and `assert_validity()` methods.
+
+### Steps to do
 
 5. Refine and test. Flesh out and improve upon the documentation.
 
