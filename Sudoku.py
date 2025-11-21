@@ -14,12 +14,13 @@ class Sudoku:
             assert len(row) == 9
 
         rows, columns, cells, blocks = Sudoku.__unpack_vectors(self, board)
-        self.__rows = rows
-        self.__columns = columns
+        self.__rows: list[Sudoku.Vector] = rows
+        self.__columns: list[Sudoku.Vector] = columns
         self.__all_cells = cells
         self.__blocks = blocks
 
     def __repr__(self) -> str:
+        """Represent a Sudoku object as a 9x9 grid with cell values."""
         representation = " " * 6
         for v in range(9):
             representation += f"v{v + 1}  "
@@ -102,59 +103,92 @@ class Sudoku:
         
         return rows, columns, cells, blocks
         
-    def get_rows(self) -> list[Vector]:
+    def get_rows(self) -> list[Sudoku.Vector]:
         return self.__rows
     
-    def get_columns(self) -> list[Vector]:
+    def get_columns(self) -> list[Sudoku.Vector]:
         return self.__columns
+
+    def is_completed(self) -> bool:
+        for vectors in [self.__rows, self.__columns]:
+            for vector in vectors:
+                if len(vector.get_known_values()) != 9:
+                    return False
+        return True
+
+    def assert_validity(self) -> None:
+        for areas in [self.__rows, self.__columns, self.__blocks]:
+            for area in areas:
+                values = area.get_known_values()
+                values.sort()
+                if values != [1, 2, 3, 4, 5, 6, 7, 8, 9]:
+                    raise Sudoku.InvalidGameSolution(
+                        "Error! This game was solved incorrectly."
+                        )
+                
+            
+    def solve_block(self, block: Sudoku.Block) -> None:
+        #print()
+        #print(f"Block {block.get_id()}: unknown block values are {block.get_unknown_values()}")
+        unknowns = block.get_unknown_values()
+        # If the block has unknown/missing values
+        if len(unknowns) != 0:
+            # For each cell in that block
+            for cell in block.get_cells():
+                # If the cell's value is missing, remove overlaps 
+                # between the block's missing numbers and 
+                # the numbers already present in the cell's row 
+                # and column. Then update the cell's possible
+                # values to reflect remaining possibilities.
+                if cell.get_value() == 0:
+                    possible_values = unknowns.copy()
+                    vectors = [cell.get_row(), cell.get_col()]
+
+                    #print(f"Currently on cell h{cell.get_row().get_id()}, v{cell.get_col().get_id()}")
+                    for vector in vectors:
+                        #print(f"  row {vector.get_id()}:")
+                        for existing_value in vector.get_known_values():
+                            if existing_value in possible_values:
+                                #print(f"    can't be {existing_value}")
+                                possible_values.remove(existing_value)
+
+
+                        # If there's only one possible value for the cell,
+                        # set its value to that. Otherwise note its new
+                        # possible values. 
+                        if len(possible_values) == 1:
+                            value = possible_values[0]
+                            cell.set_value(value)
+                            #print(f"cell could only have value {value}")
+                            block.add_known_value(value)
+                            for vector in vectors:
+                                vector.add_known_value(value)
+
+                            #print(f"Unknown block values are {block.get_unknown_values()}")
+
+                            # Run again
+                            self.solve_block(block)
+                        else:
+                            cell.set_possible_values(possible_values)
+                        
+                   # print(f"  possible values: {possible_values}")
     
     def solve(self) -> None:
-        # For each block in the puzzle
-        for block in self.__blocks:
-            print(f"known block values: {block.get_known_values()}")
-            unknowns = block.get_unknown_values()
-            # If the block has unknown/missing values
-            if len(unknowns) != 0:
-                # For each cell in that block
-                for cell in block.get_cells():
-                    # If the cell's value is missing, remove overlaps 
-                    # between the block's missing numbers and 
-                    # the numbers already present in the cell's row 
-                    # and column. Then update the cell's possible
-                    # values to reflect remaining possibilities.
-                    if cell.get_value() == 0:
-                        possible_values = unknowns
-                        vectors = [cell.get_row(), cell.get_col()]
+        """Solves the Sudoku puzzle.
 
-                        print(f"on cell: h{cell.get_row().get_id()}, v{cell.get_col().get_id()}")
+        While the Sudoku puzzle hasn't been completed yet, iterate 
+        through each of its 9 blocks. If a block hasn't been solved,
+        call the solve_block() function on it.
+        """
 
-                        for vector in vectors:
-                            temp_possible_values = possible_values
-                            print(f"  row {vector.get_id()}:")
-                            for existing_value in vector.get_known_values():
-                                if existing_value in temp_possible_values:
-                                    print(f"    can't be {existing_value}")
-                                    temp_possible_values.remove(existing_value)
-                            print(f"  poss. {temp_possible_values}")
+        while not self.is_completed():
+            for block in self.__blocks:
+                unknown_values = block.get_unknown_values()
 
-                            # If there's only one possible value for the cell,
-                            # set its value to that. Otherwise note its new
-                            # possible values.
-                            if len(temp_possible_values) == 1:
-                                value = temp_possible_values[0]
-                                cell.set_value(value)
-                                print(f"cell could only have value {value}")
-                                unknowns.remove(value)
-                                block.add_known_value(value)
-                                for vector in vectors:
-                                    vector.add_known_value(value)
-                            else:
-                                cell.set_possible_values(temp_possible_values)
+                if len(unknown_values) != 0:
+                    self.solve_block(block)
 
-                # For each cell in that block
-                # for cell in block.get_cells():
-
-        # print(repr(self))
+        self.assert_validity()
 
     class Block:
         # __id: int
@@ -179,7 +213,6 @@ class Sudoku:
 
         def add_known_value(self, value: int) -> None:
             self.__known_values.append(value)
-            print(f"unknown values: {self.__unknown_values}")
             self.__unknown_values.remove(value)
 
         def add_cell(self, cell) -> None:
@@ -255,7 +288,13 @@ class Sudoku:
         # __value: int
         # __possible_values: list[int] | None
 
-        def __init__(self, row: Sudoku.Vector, col: Sudoku.Vector, block: Sudoku.Block, value: int = 0) -> None:
+        def __init__(
+                self, 
+                row: Sudoku.Vector, 
+                col: Sudoku.Vector, 
+                block: Sudoku.Block, 
+                value: int = 0
+                ) -> None:
             self.__row = row
             self.__column = col
             self.__block = block
@@ -297,3 +336,6 @@ class Sudoku:
         def set_value(self, value: int) -> None:
             self.__value = value
             self.__possible_values = None
+
+    class InvalidGameSolution(Exception):
+        pass
