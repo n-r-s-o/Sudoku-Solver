@@ -14,7 +14,8 @@ def main():
         ])
     
     print(repr(game_instance))
-    game_instance.print_missing_nums()
+    game_instance.solve()
+    print(repr(game_instance))
 
 if __name__ == "__main__":
     main()
