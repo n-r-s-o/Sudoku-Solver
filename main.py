@@ -1,7 +1,7 @@
 from Sudoku import *
 
 def main():
-    game_instance = Sudoku(board = [
+    game_instance_easy = Sudoku(board = [
         [3, 1, 0, 6, 0, 5, 4, 0, 0], 
         [6, 0, 4, 2, 1, 0, 0, 8, 3], 
         [9, 0, 0, 0, 3, 0, 0, 2, 0], 
@@ -13,9 +13,21 @@ def main():
         [5, 0, 0, 0, 7, 0, 8, 0, 9]
         ])
     
-    print(repr(game_instance))
-    game_instance.solve()
-    print(repr(game_instance))
+    game_instance_easy.solve()
+
+    game_instance_expert = Sudoku(board = [
+        [0, 0, 0, 0, 0, 0, 0, 6, 0], 
+        [0, 2, 0, 3, 0, 0, 1, 0, 0], 
+        [5, 0, 0, 8, 0, 9, 0, 0, 0], 
+        [8, 0, 0, 0, 5, 0, 0, 9, 6], 
+        [0, 4, 0, 6, 0, 0, 0, 0, 0], 
+        [0, 0, 0, 4, 0, 0, 0, 0, 3], 
+        [9, 0, 0, 0, 7, 0, 5, 0, 0], 
+        [0, 0, 0, 0, 0, 0, 0, 4, 0], 
+        [0, 1, 0, 9, 0, 0, 8, 0, 0]
+        ])
+    
+    game_instance_expert.solve()
 
 if __name__ == "__main__":
     main()
