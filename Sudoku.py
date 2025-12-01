@@ -1,14 +1,16 @@
 class Sudoku:
     """
-    A class used to solve sudoku puzzles. In these kinds of puzzles, 
+    A class used to solve Sudoku puzzles. In these kinds of puzzles, 
     each row, column, and block (3x3 grid of cells) should have the 
-    numbers 1-9 spread over exactly 9 cells. 
+    numbers 1-9 spread over exactly 9 cells, without duplicate values.
 
     Attributes
     ----------
     __rows: list[Sudoku.Vector]
     __columns: list[Sudoku.Vector]
+    __cells: list[Sudoku.Cell]
     __blocks: list[Sudoku.Block]
+    __initial_state: str
 
     Methods
     -------
@@ -21,17 +23,31 @@ class Sudoku:
         Returns __rows.
     get_columns()
         Returns __columns.
+    get_cells()
+        Returns __cells.
+    get_initial_state()
+        Return __initial_state, a string representation of the board 
+        as it was when Sudoku was initialized.
     is_completed()
         Returns a boolean to indicate whether the puzzle is finished 
         or not.
     assert_validity()
         Raises an InvalidGameSolution exception if each subsection of 
-        a sudoku puzzle doesn't contain exactly the values 1-9.
-    solve_block(block: Sudoku.Block)
+        a Sudoku puzzle doesn't contain exactly the values 1-9.
+    __deduce_block_values(block: Sudoku.Block)
         Attemps to find missing Cell values of a Block, given what 
-        known values of said Cell's row and columns are.
+        known values of said Cell's row and columns are. It cannot 
+        always solve puzzles single-handedly.
+    __value_is_safe(cell: Sudoku.Cell, value: int)
+        Returns True if a Cell's value doesn't exist in its given row, 
+        column, or Block. Otherwise returns False.
+    __solve_recursively(cells: list[Sudoku.Cell], index: int)
+        Recursively solves Sudoku puzzles in a brute-force manner. 
+        It's less efficient than using deduction.
     solve()
-        Solves a sudoku puzzle.
+        Solves a Sudoku puzzle. Initially, __deduce_block_values() is 
+        called, but if this proves insufficient, __solve_recursively() 
+        is called as well.
 
     Inner classes
     -------------
@@ -39,13 +55,13 @@ class Sudoku:
     Block(Subsection)
     Vector(Subsection)
     Cell
-    InvalidGameSolution(Exception) 
+    InvalidGameSolution(Exception)
 
     """
 
     def __init__(self, board: list[list[int]]) -> None:
         """
-        Takes the special input of a sudoku board's game data. This is 
+        Takes the special input of a Sudoku board's game data. This is 
         represented as a list of 9 rows containing 9 values. Each 
         value can be a number of 1-9 to represent a final value, or 0 
         to represent a missing one. No values can be duplicates.
@@ -63,36 +79,32 @@ class Sudoku:
             [0, 3, 0, 0, 0, 0, 7, 6, 2], 
             [5, 0, 0, 0, 7, 0, 8, 0, 9]
             ]
+
         """
+
         # Assert that the board argument meets the criteria of a valid 
-        # sudoku board.
+        # Sudoku board.
         assert len(board) == 9
         for row in board:
             assert len(row) == 9
 
-        rows, columns, blocks = Sudoku.__unpack_vectors(self, board)
+        rows, columns, blocks, cells = Sudoku.__unpack_vectors(self, board)
         self.__rows: list[Sudoku.Vector] = rows
         self.__columns: list[Sudoku.Vector] = columns
-        self.__blocks = blocks
-
-    def __repr__(self) -> str:
-        """Represent a Sudoku object as a 9x9 grid with cell values."""
-        representation = " " * 6
-        for column in range(9):
-            representation += f"v{column + 1}  "
-        representation += f"\n{" " * 6}{"_" * 35}\n"
-        for row in self.__rows:
-            representation += f"{str(row)}\n"
-        return representation
+        self.__blocks: list[Sudoku.Block] = blocks
+        self.__cells: list[Sudoku.Cell] = cells
+        self.__initial_state: str = repr(self)
 
     def __unpack_vectors(self, board: list[list[int]]) -> tuple[
         list[Sudoku.Vector], 
         list[Sudoku.Vector],
-        list[Sudoku.Block]
+        list[Sudoku.Block],
+        list[Sudoku.Cell]
         ]:
         rows: list[Sudoku.Vector] = []
         columns: list[Sudoku.Vector] = []
         blocks: list[Sudoku.Block] = []
+        cells: list[Sudoku.Cell] = []
         row_counter = 1
         column_counter = 1
 
@@ -103,7 +115,7 @@ class Sudoku:
             new_block = Sudoku.Block(id=(num + 1))
             blocks.append(new_block)
 
-        # Populate the list of rows.
+        # Populate the lists of rows and cells.
         for row in board:
             row_vector = Sudoku.Vector(orientation="row", id=(row_counter))
 
@@ -134,26 +146,43 @@ class Sudoku:
                     if block.get_id() == cell_block_id:
                         cell_block = block
 
-                self.Cell(
+                cell = self.Cell(
                     row=row_vector,
                     col=columns[column_counter-1],
                     block=cell_block,
                     value=num
                     )
-
+                cells.append(cell)
                 column_counter += 1
 
             rows.append(row_vector)
             row_counter += 1
             column_counter = 1
         
-        return rows, columns, blocks
-        
+        return rows, columns, blocks, cells
+
+    def __repr__(self) -> str:
+        """Represent a Sudoku object as a 9x9 grid with cell values."""
+
+        representation = " " * 6
+        for column in range(9):
+            representation += f"v{column + 1}  "
+        representation += f"\n{" " * 6}{"_" * 35}\n"
+        for row in self.__rows:
+            representation += f"{str(row)}\n"
+        return representation     
+
     def get_rows(self) -> list[Sudoku.Vector]:
         return self.__rows
     
     def get_columns(self) -> list[Sudoku.Vector]:
         return self.__columns
+
+    def get_cells(self) -> list[Sudoku.Cell]:
+        return self.__cells
+
+    def get_initial_state(self) -> str:
+        return self.__initial_state
 
     def is_completed(self) -> bool:
         for vectors in [self.__rows, self.__columns]:
@@ -179,10 +208,10 @@ class Sudoku:
                         "Error! This game was solved incorrectly."
                         )
             
-    def solve_block(self, block: Sudoku.Block) -> None:
+    def __deduce_block_values(self, block: Sudoku.Block) -> None:
         unknown_values = block.get_unknown_values()
-        # If the block has unknown/missing values, attempt to find the 
-        # value of each empty cell.
+        # If the block has unknown/missing values, attempt to deduce 
+        # the value of each empty cell.
         if len(unknown_values) != 0:
             for cell in block.get_cells():
                 # If a cell's value is missing, remove overlaps 
@@ -212,31 +241,109 @@ class Sudoku:
                             for vector in vectors:
                                 vector.add_known_value(value)
 
-                            self.solve_block(block)
+                            self.__deduce_block_values(block)
                         else:
                             cell.set_possible_values(possible_values)
-    
+
+    def __value_is_safe(self, cell: Sudoku.Cell, value: int) -> bool:
+        subsections: list[Sudoku.Subsection] = [
+            cell.get_row(), 
+            cell.get_col(), 
+            cell.get_block()
+            ]
+        
+        for section in subsections: 
+            if value in section.get_known_values():
+                return False
+
+        return True
+
+    def __solve_recursively(self, cells: list[Sudoku.Cell], index: int):
+        try:
+            cell = cells[index]
+        except IndexError:
+            return True
+
+        # Base case: The final Cell of the puzzle has been reached.
+        if len(cells) == index:
+            possible_values = cell.get_possible_values()
+            if possible_values != None:
+                for value in possible_values:
+                    if self.__value_is_safe(cell, value):
+                        cell.set_value(value)
+                        cell.get_block().add_known_value(value)
+                        cell.get_row().add_known_value(value)
+                        cell.get_col().add_known_value(value)
+                        return True
+            else:
+                return True
+
+        value = cell.get_value()
+
+        # If cell is already occupied then move forward
+        if value != 0 and self.__value_is_safe(cell, value):
+            return self.__solve_recursively(cells, index + 1)
+
+        for num in range(1, 10):
+            
+            # If it is safe to place num at current position
+            if self.__value_is_safe(cell, num):
+                cell.set_value(num)
+                cell.get_block().add_known_value(num)
+                cell.get_row().add_known_value(num)
+                cell.get_col().add_known_value(num)
+                
+                if self.__solve_recursively(cells, index + 1):
+                    return True
+                
+                cell.set_value(0)
+                cell.get_block().remove_known_value(num)
+                cell.get_row().remove_known_value(num)
+                cell.get_col().remove_known_value(num)
+
+        return False
+
     def solve(self) -> None:
         """Solves the Sudoku puzzle.
 
         While the Sudoku puzzle hasn't been completed yet, iterate 
         through each of its 9 blocks. If a block hasn't been solved,
-        call the solve_block() function on it. Finally, assert that
-        the puzzle solution is valid.
+        call the __deduce_block_values() function on it. If the 
+        Sudoku puzzle's state remains unchanged after any of the 
+        iterations, call __solve_recursively() to solve it. Once it is 
+        solved, assert that the puzzle solution is valid, and print the
+        solution.
+        
         """
 
         while not self.is_completed():
+            initial_state = repr(self)
+
             for block in self.__blocks:
                 unknown_values = block.get_unknown_values()
 
                 if len(unknown_values) != 0:
-                    self.solve_block(block)
+                    self.__deduce_block_values(block)
+
+            current_state = repr(self)
+
+            if initial_state == current_state:
+                unknown_cells: list[Sudoku.Cell] = []
+
+                for cell in self.get_cells():
+                    if cell.get_value() == 0:
+                        unknown_cells.append(cell)
+
+                self.__solve_recursively(unknown_cells, 0)
 
         self.assert_validity()
 
+        print(f"Initial puzzle state:\n\n {self.get_initial_state()}\n")
+        print(f"Solved puzzle state:\n\n {repr(self)}")
+
     class Subsection:
         """
-        A parent class that represents subsections of a sudoku puzzle, 
+        A parent class that represents subsections of a Sudoku puzzle, 
         each of which contain 9 cells. 
 
         Attributes
@@ -282,7 +389,6 @@ class Sudoku:
             value = cell.get_value()
             if value != 0:
                 self.__known_values.append(value)
-                print(self.__unknown_values)
                 self.__unknown_values.remove(value)
 
         def get_unknown_values(self) -> list[int]:
@@ -291,17 +397,21 @@ class Sudoku:
         def get_known_values(self) -> list[int]:
             return self.__known_values
         
+        def remove_known_value(self, value: int) -> None:
+            self.__unknown_values.append(value)
+            if value in self.__known_values:
+                self.__known_values.remove(value)
+        
         def add_known_value(self, value: int) -> None:
             self.__known_values.append(value)
-            self.__unknown_values.remove(value)
+            if value in self.__unknown_values:
+                self.__unknown_values.remove(value)
 
         def get_cells(self) -> list[Sudoku.Cell]:
             return self.__cells
 
     class Block(Subsection):
-        """
-        A child class extending Subsection. Each has 9 cells.
-        """
+        """A child class extending Subsection. Each has 9 cells."""
 
         def __init__(self, id: int) -> None:
             super().__init__(id)
@@ -309,12 +419,13 @@ class Sudoku:
     class Vector(Subsection):
         """
         A child class extending Subsection. A vector can be either a 
-        column or a row of a sudoku puzzle. Each has 9 cells.
+        column or a row of a Sudoku puzzle. Each has 9 cells.
 
         Attributes
         ----------
         __orientation: str
             Must only be "row" or "column".
+
         """
 
         def __init__(self, id: int, orientation: str) -> None:
@@ -340,7 +451,7 @@ class Sudoku:
 
     class Cell:
         """
-        A class that represents indivdual cells in a sudoku puzzle.
+        A class that represents indivdual cells in a Sudoku puzzle.
 
         Attributes
         ----------
@@ -348,6 +459,7 @@ class Sudoku:
         __column: Sudoku.Vector
         __value: int
         __possible_values: list[int]|None
+        __block: Sudoku.Block
 
         Methods
         -------
@@ -364,8 +476,9 @@ class Sudoku:
             Returns the current value of the cell. A missing value is 
             represented by a 0.
         set_value(value: int)
-            Sets __value to the deduced final value and sets 
-            __possible_values to Nonel.
+            Sets __value to the believed final value and sets 
+            __possible_values to None.
+
         """
 
         def __init__(
@@ -379,6 +492,7 @@ class Sudoku:
             self.__column = col
             self.__value = value
             self.__possible_values = None
+            self.__block = block
             block.add_cell(self)
             row.add_cell(self)
             col.add_cell(self)
@@ -394,6 +508,9 @@ class Sudoku:
     
         def get_col(self) -> Sudoku.Vector:
             return self.__column
+        
+        def get_block(self) -> Sudoku.Block:
+            return self.__block
 
         def get_value(self) -> int:
             return self.__value
@@ -404,4 +521,5 @@ class Sudoku:
 
     class InvalidGameSolution(Exception):
         """A simple custom Exception class."""
+
         pass
