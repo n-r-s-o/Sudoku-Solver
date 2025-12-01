@@ -1,12 +1,12 @@
 # Sudoku Solver
 
-This project is a wip. The plan is to make a program that takes an input representation of a sudoku puzzle, as a list of lists of ints (0 represents missing values), and then solves the puzzle efficiently. My approach is to firstly invent my own algorithm to solve the problem, and then to look up well-established methods online, so that I can do a side-by-side comparison and gain new insights into how I can better approach similar problems in the future.
+This project is a wip. The plan is to make a program that takes an input representation of a Sudoku puzzle, as a list of lists of ints (0 represents missing values), and then solves the puzzle efficiently. My approach is to firstly invent my own algorithm to solve the problem, and then to look up well-established methods online, so that I can do a side-by-side comparison and gain new insights into how I can better approach similar problems in the future.
 
 ## Project plan
 
-### Steps completed
+### Completed steps
 
-1. Preparation: Analyze requirements. Work out preliminary sudoku puzzle solving logic. Make a plan for which classes and data collections to inlcude to efficiently run the solving algorithm.
+1. Preparation: Analyze requirements. Work out preliminary Sudoku puzzle solving logic. Make a plan for which classes and data collections to inlcude to efficiently run the solving algorithm.
 
 2. Create rough drafts of the Sudoku module's classes, including data collections.
 
@@ -16,8 +16,8 @@ This project is a wip. The plan is to make a program that takes an input represe
 
 5. Refine and test. Flesh out and improve upon the documentation.
 
-### Steps to do
+6. Research other, more well-established Sudoku algorithms online. Compare these to my solution and analyze its potential shortcomings. 
 
-6. Introduce more types of accepted inputs, e.g. by image. Create a method for checking if a sudoku puzzle is able to be solved, or if it has multiple solutions.
+### Potential future steps
 
-7. Research other, more well-established sudoku algorithms online. Compare these to my solution and analyze its potential shortcomings. 
+7. Introduce more types of accepted inputs, e.g. by image. Create a method for checking if a Sudoku puzzle is able to be solved, or if it has multiple solutions.
