@@ -1,7 +1,7 @@
 class Sudoku:
     """
     A class used to solve Sudoku puzzles. In these kinds of puzzles, 
-    each row, column, and block (3x3 grid of cells) should have the 
+    each row, column, and block (3 x 3 grid of cells) should have the 
     numbers 1-9 spread over exactly 9 cells, without duplicate values.
 
     Attributes
@@ -11,6 +11,19 @@ class Sudoku:
     __cells: list[Sudoku.Cell]
     __blocks: list[Sudoku.Block]
     __initial_state: str
+
+    __unpack_vectors(board: list[list[int]])
+    get_rows()
+    get_columns()
+    get_cells()
+    get_initial_state()
+    is_completed()
+    assert_validity()
+    __deduce_block_values(block: Sudoku.Block)
+    __value_is_safe(cell: Sudoku.Cell, value: int)
+    __solve_recursively(cells: list[Sudoku.Cell], index: int)
+    solve()
+
 
     Methods
     -------
@@ -162,7 +175,7 @@ class Sudoku:
         return rows, columns, blocks, cells
 
     def __repr__(self) -> str:
-        """Represent a Sudoku object as a 9x9 grid with cell values."""
+        """Represent a Sudoku object as a 9 x 9 grid with cell values."""
 
         representation = " " * 6
         for column in range(9):
@@ -258,7 +271,7 @@ class Sudoku:
 
         return True
 
-    def __solve_recursively(self, cells: list[Sudoku.Cell], index: int):
+    def __solve_recursively(self, cells: list[Sudoku.Cell], index: int) -> bool:
         try:
             cell = cells[index]
         except IndexError:
@@ -367,6 +380,8 @@ class Sudoku:
             Returns a list of ints, representing each value between 
             1-9 that has already been assigned to one of the 
             subsection's cells.
+        remove_known_value():
+            Removes a value from __known_values.
         add_known_value(value: int)
             Adds an int value to __known_values and removes it from
             __unknown_values.
@@ -458,7 +473,7 @@ class Sudoku:
         __row: Sudoku.Vector
         __column: Sudoku.Vector
         __value: int
-        __possible_values: list[int]|None
+        __possible_values: list[int] | None
         __block: Sudoku.Block
 
         Methods
@@ -475,6 +490,8 @@ class Sudoku:
         get_value()
             Returns the current value of the cell. A missing value is 
             represented by a 0.
+        get_block()
+            Returns Block that contains the Cell.
         set_value(value: int)
             Sets __value to the believed final value and sets 
             __possible_values to None.
@@ -497,7 +514,7 @@ class Sudoku:
             row.add_cell(self)
             col.add_cell(self)
 
-        def get_possible_values(self) -> list[int]|None:
+        def get_possible_values(self) -> list[int] | None:
             return self.__possible_values
 
         def set_possible_values(self, values: list[int]) -> None:
