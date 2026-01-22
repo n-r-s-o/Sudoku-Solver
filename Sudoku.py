@@ -12,19 +12,6 @@ class Sudoku:
     __blocks: list[Sudoku.Block]
     __initial_state: str
 
-    __unpack_vectors(board: list[list[int]])
-    get_rows()
-    get_columns()
-    get_cells()
-    get_initial_state()
-    is_completed()
-    assert_validity()
-    __deduce_block_values(block: Sudoku.Block)
-    __value_is_safe(cell: Sudoku.Cell, value: int)
-    __solve_recursively(cells: list[Sudoku.Cell], index: int)
-    solve()
-
-
     Methods
     -------
     __unpack_vectors(board: list[list[int]])
@@ -123,14 +110,14 @@ class Sudoku:
 
         # Populate the lists of columns and blocks.
         for num in range(9):
-            col_vector = Sudoku.Vector(orientation="column", id=(num + 1))
+            col_vector = Sudoku.Vector(orientation="column", id=(num + 1), sudoku=self)
             columns.append(col_vector)
-            new_block = Sudoku.Block(id=(num + 1))
+            new_block = Sudoku.Block(id=(num + 1), sudoku=self)
             blocks.append(new_block)
 
         # Populate the lists of rows and cells.
         for row in board:
-            row_vector = Sudoku.Vector(orientation="row", id=(row_counter))
+            row_vector = Sudoku.Vector(orientation="row", id=(row_counter), sudoku=self)
 
             for num in row:
                 row_id = row_vector.get_id()
@@ -163,6 +150,7 @@ class Sudoku:
                     row=row_vector,
                     col=columns[column_counter-1],
                     block=cell_block,
+                    sudoku=self,
                     value=num
                     )
                 cells.append(cell)
@@ -243,9 +231,9 @@ class Sudoku:
 
                         # If there's only one possible value for this 
                         # cell, set its value to that, add it to its 
-                        # block's known values, and run solve_block() 
-                        # again. Otherwise, simply note its new 
-                        # possible values.
+                        # block's known values, and run 
+                        # __deduce_block_values() again. Otherwise, 
+                        # simply note its new possible values.
                         if len(possible_values) == 1:
                             value = possible_values[0]
                             cell.set_value(value)
@@ -428,7 +416,7 @@ class Sudoku:
     class Block(Subsection):
         """A child class extending Subsection. Each has 9 cells."""
 
-        def __init__(self, id: int) -> None:
+        def __init__(self, id: int, sudoku: Sudoku) -> None:
             super().__init__(id)
 
     class Vector(Subsection):
@@ -443,7 +431,7 @@ class Sudoku:
 
         """
 
-        def __init__(self, id: int, orientation: str) -> None:
+        def __init__(self, id: int, orientation: str, sudoku: Sudoku) -> None:
             super().__init__(id)
             assert orientation == "row" or "column"
             self.__orientation = orientation
@@ -502,9 +490,14 @@ class Sudoku:
                 self, 
                 row: Sudoku.Vector, 
                 col: Sudoku.Vector, 
-                block: Sudoku.Block, 
+                block: Sudoku.Block,
+                sudoku: Sudoku,
                 value: int = 0
                 ) -> None:
+            
+            if row == col:
+                raise ValueError
+
             self.__row = row
             self.__column = col
             self.__value = value
