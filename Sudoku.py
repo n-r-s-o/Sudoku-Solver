@@ -43,7 +43,8 @@ class Sudoku:
         column, or Block. Otherwise returns False.
     __solve_recursively(cells: list[Sudoku.Cell], index: int)
         Recursively solves Sudoku puzzles in a brute-force manner. 
-        It's less efficient than using deduction.
+        It's less efficient than using deduction, but guaranteed to 
+        solve the puzzle (if it's possible to solve).
     solve()
         Solves a Sudoku puzzle. Initially, __deduce_block_values() is 
         called, but if this proves insufficient, __solve_recursively() 
